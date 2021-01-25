@@ -89,7 +89,7 @@ namespace XeroAPI2Tests
                 simpleButton1.Enabled = true;
                 button1.Enabled = true;
             }
-
+ 
             xeroAPI.StatusUpdates += StatusUpdates; // Bind to the status update event 
         }
         private void SaveConfig()
@@ -190,7 +190,7 @@ namespace XeroAPI2Tests
             UpdateStatus($"Found {contacts2.Count} Active Contacts");
 
             var creditnotes = xeroAPI.AccountingApi.CreditNotes(null, new DateTime(2020, 11, 1));
-
+          
             List<Xero.Net.Api.Model.Accounting.Account.StatusEnum> status = new List<Xero.Net.Api.Model.Accounting.Account.StatusEnum>();
             status.Add(Xero.Net.Api.Model.Accounting.Account.StatusEnum.DELETED);
             status.Add(Xero.Net.Api.Model.Accounting.Account.StatusEnum.ARCHIVED);
