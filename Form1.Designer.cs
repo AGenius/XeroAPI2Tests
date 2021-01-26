@@ -67,6 +67,9 @@ namespace XeroAPI2Tests
             this.hasValidationErrorsDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.statusAttributeStringDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.button2 = new System.Windows.Forms.Button();
+            this.button3 = new System.Windows.Forms.Button();
+            this.button4 = new System.Windows.Forms.Button();
+            this.txtName = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
@@ -347,11 +350,39 @@ namespace XeroAPI2Tests
             this.button2.Text = "Load Contacts Grid";
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
+            // button3
+            // 
+            this.button3.Location = new System.Drawing.Point(501, 12);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(128, 23);
+            this.button3.TabIndex = 6;
+            this.button3.Text = "Load Contact";
+            this.button3.Click += new System.EventHandler(this.button3_Click);
+            // 
+            // button4
+            // 
+            this.button4.Location = new System.Drawing.Point(656, 12);
+            this.button4.Name = "button4";
+            this.button4.Size = new System.Drawing.Size(128, 23);
+            this.button4.TabIndex = 7;
+            this.button4.Text = "Find Contact:";
+            this.button4.Click += new System.EventHandler(this.button4_Click);
+            // 
+            // txtName
+            // 
+            this.txtName.Location = new System.Drawing.Point(805, 15);
+            this.txtName.Name = "txtName";
+            this.txtName.Size = new System.Drawing.Size(257, 20);
+            this.txtName.TabIndex = 8;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1465, 650);
+            this.Controls.Add(this.txtName);
+            this.Controls.Add(this.button4);
+            this.Controls.Add(this.button3);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.dataGridView1);
             this.Controls.Add(this.button1);
@@ -363,6 +394,7 @@ namespace XeroAPI2Tests
             ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -405,6 +437,9 @@ namespace XeroAPI2Tests
         private System.Windows.Forms.DataGridViewTextBoxColumn hasAttachmentsDataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn hasValidationErrorsDataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn statusAttributeStringDataGridViewTextBoxColumn;
+        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button button4;
+        private System.Windows.Forms.TextBox txtName;
     }
 }
 

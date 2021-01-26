@@ -39,7 +39,7 @@ namespace XeroAPI2Tests
                         ClientID = XeroClientID,
                         CallbackUri = XeroCallbackUri,
                         // Add them this way or see below
-                        //Scopes = new List<XeroAuth2API.XeroScope> { XeroAuth2API.XeroScope.accounting_contacts, XeroAuth2API.XeroScope.accounting_transactions },
+                        //Scopes = new List<Xero.Net.Core.OAuth2.Model.XeroScope> { Xero.Net.Core.OAuth2.Model.XeroScope.accounting_contacts, Xero.Net.Core.OAuth2.Model.XeroScope.accounting_transactions },
                         State = XeroState, // Optional - Not needed for a desktop app
                         codeVerifier = null // Code verifier will be generated if empty
                     };
@@ -56,19 +56,19 @@ namespace XeroAPI2Tests
                     ClientID = XeroClientID,
                     CallbackUri = XeroCallbackUri,
                     // Add them this way or see below
-                    //Scopes = new List<XeroAuth2API.XeroScope> { XeroAuth2API.XeroScope.accounting_contacts, XeroAuth2API.XeroScope.accounting_transactions },
+                    //Scopes = new List<Xero.Net.Core.OAuth2.Model.XeroScope> { Xero.Net.Core.OAuth2.Model.XeroScope.accounting_contacts, Xero.Net.Core.OAuth2.Model.XeroScope.accounting_transactions },
                     State = XeroState, // Optional - Not needed for a desktop app
                     codeVerifier = null // Code verifier will be generated if empty
                 };
                 XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.all);
                 // Or add idividualy
-                //XeroConfig.AddScope(XeroAuth2API.XeroScope.files);
-                //XeroConfig.AddScope(XeroAuth2API.XeroScope.accounting_transactions);
-                //XeroConfig.AddScope(XeroAuth2API.XeroScope.accounting_reports_read);
-                //XeroConfig.AddScope(XeroAuth2API.XeroScope.accounting_journals_read);
-                //XeroConfig.AddScope(XeroAuth2API.XeroScope.accounting_settings_read);
-                //XeroConfig.AddScope(XeroAuth2API.XeroScope.accounting_contacts);
-                //XeroConfig.AddScope(XeroAuth2API.XeroScope.assets);               
+                //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.files);
+                //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.accounting_transactions);
+                //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.accounting_reports_read);
+                //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.accounting_journals_read);
+                //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.accounting_settings_read);
+                //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.accounting_contacts);
+                //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.assets);               
             }
 
             // Restore saved config
@@ -89,7 +89,7 @@ namespace XeroAPI2Tests
                 simpleButton1.Enabled = true;
                 button1.Enabled = true;
             }
- 
+
             xeroAPI.StatusUpdates += StatusUpdates; // Bind to the status update event 
         }
         private void SaveConfig()
@@ -184,13 +184,13 @@ namespace XeroAPI2Tests
 
             var contacts = xeroAPI.AccountingApi.Contacts(Xero.Net.Api.Model.Accounting.Contact.ContactStatusEnum.ARCHIVED);
             if (contacts != null) UpdateStatus($"Found {contacts.Count} Archived Contacts");
-           
-            var contacts2 = xeroAPI.AccountingApi.Contacts(Xero.Net.Api.Model.Accounting.Contact.ContactStatusEnum.ACTIVE, null, null, Xero.Net.Core.Api.AccountingApi.ContactType.isCustomer);
-            
+
+            var contacts2 = xeroAPI.AccountingApi.Contacts(Xero.Net.Api.Model.Accounting.Contact.ContactStatusEnum.ACTIVE, Xero.Net.Core.Api.AccountingApi.ContactType.isCustomer);
+
             UpdateStatus($"Found {contacts2.Count} Active Contacts");
 
             var creditnotes = xeroAPI.AccountingApi.CreditNotes(null, new DateTime(2020, 11, 1));
-          
+
             List<Xero.Net.Api.Model.Accounting.Account.StatusEnum> status = new List<Xero.Net.Api.Model.Accounting.Account.StatusEnum>();
             status.Add(Xero.Net.Api.Model.Accounting.Account.StatusEnum.DELETED);
             status.Add(Xero.Net.Api.Model.Accounting.Account.StatusEnum.ARCHIVED);
@@ -199,10 +199,10 @@ namespace XeroAPI2Tests
             atypes.Add(Xero.Net.Api.Model.Accounting.AccountType.OVERHEADS);
             atypes.Add(Xero.Net.Api.Model.Accounting.AccountType.BANK);
 
-            var accounts1 = xeroAPI.AccountingApi.Accounts(status, "Name", atypes); // Return List<Xero.Net.Api.Model.Accounting.Account>
+            var accounts1 = xeroAPI.AccountingApi.Accounts(status, atypes); // Return List<Xero.Net.Api.Model.Accounting.Account>
             if (accounts1 != null) UpdateStatus($"Found {accounts1.Count} Archived and Deleted Accounts with Type = Bank and Overheads ");
 
-            var accounts2 = xeroAPI.AccountingApi.Accounts(Xero.Net.Api.Model.Accounting.Account.StatusEnum.ACTIVE, "Name"); // Return List<Xero.Net.Api.Model.Accounting.Account>
+            var accounts2 = xeroAPI.AccountingApi.Accounts(Xero.Net.Api.Model.Accounting.Account.StatusEnum.ACTIVE); // Return List<Xero.Net.Api.Model.Accounting.Account>
             UpdateStatus($"Found {accounts2.Count} Active Accounts");
 
             var accounts3 = xeroAPI.AccountingApi.Accounts(); // Return List<Xero.Net.Api.Model.Accounting.Account>
@@ -572,12 +572,42 @@ namespace XeroAPI2Tests
         private void button2_Click(object sender, EventArgs e)
         {
             var contacts = xeroAPI.AccountingApi.Contacts(Xero.Net.Api.Model.Accounting.Contact.ContactStatusEnum.ACTIVE);
-            
+
             if (contacts != null)
             {
                 UpdateStatus($"Found {contacts.Count} Active Contacts");
                 bindingSource1.DataSource = contacts;
             }
+        }
+
+        private async void button3_Click(object sender, EventArgs e)
+        {
+            // var contact = xeroAPI.AccountingApi.Contact(new Guid("00000000-0000-0000-0000-000000000000")); // Will break as no Error handling
+            var contacts = xeroAPI.AccountingApi.Contacts(null, null, null, null, new List<Guid> { new Guid("00000000-0000-0000-0000-000000000000") });
+            try
+            {
+                // Will handle not found
+                var contact2 = xeroAPI.AccountingApi.Contact(new Guid("00000000-0000-0000-0000-000000000000"));
+            }
+            catch (Exception ex)
+            {
+
+                int h = 0;
+            }
+
+            xeroAPI.AccountingApi.RaiseNotFoundErrors = false;// Should return null for not found
+            var contact3 = xeroAPI.AccountingApi.Contact(new Guid("00000000-0000-0000-0000-000000000000"));
+
+
+
+            //3f1f7d89-be0f-4141-bd12-151187e19d05
+            var contact4 = xeroAPI.AccountingApi.Contact(new Guid("3f1f7d89-be0f-4141-bd12-151187e19d05"));
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            var contact = xeroAPI.AccountingApi.Contacts($"Name =\"{txtName.Text}\""); // Will break as no Error handling
+            bindingSource1.DataSource = contact;
         }
     }
 }
