@@ -93,7 +93,7 @@
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AGenius.ExtensionsCollection\Extenstions.Collection\AGenius.UsefulStuff.csproj">
+    <ProjectReference Include="..\AGenius.ExtensionsCollection\AGenius.UsefulStuff\AGenius.UsefulStuff.csproj">
       <Project>{0b7cc724-52c5-4b8f-a028-91e6226f7922}</Project>
       <Name>AGenius.UsefulStuff</Name>
     </ProjectReference>

@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XeroAPI2Tests", "XeroAPI2Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xero.Net", "..\Xero.Net2\Xero.Net.csproj", "{C3875286-3898-408D-9BC3-D4C50E177DFB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AGenius.UsefulStuff", "..\AGenius.ExtensionsCollection\Extenstions.Collection\AGenius.UsefulStuff.csproj", "{0B7CC724-52C5-4B8F-A028-91E6226F7922}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AGenius.UsefulStuff", "..\AGenius.ExtensionsCollection\AGenius.UsefulStuff\AGenius.UsefulStuff.csproj", "{0B7CC724-52C5-4B8F-A028-91E6226F7922}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -18,6 +18,8 @@ namespace XeroAPI2Tests
         string XeroClientID = "Your Client ID"; // Will load from File
         string tenantName = "demo company (uk)";// "your company";
 
+        public bool isXeroSetup { get; set; }
+
         public static string ApplicationPath = System.IO.Directory.GetParent(System.Reflection.Assembly.GetEntryAssembly().Location).FullName;
 
         XeroConfiguration XeroConfig = null;
@@ -28,14 +30,52 @@ namespace XeroAPI2Tests
         }
         private void Form1_Load(object sender, EventArgs e)
         {
-            // We can ether save/restore the entire config or just the AccessToken element
-            string tokendata = AGenius.UsefulStuff.Utils.ReadTextFile("tokendata.txt");
-            UpdateStatus($"Loaded Token");
-            XeroClientID = AGenius.UsefulStuff.Utils.ReadTextFile("XeroClientID.txt");
-            if (!string.IsNullOrEmpty(tokendata))
+
+        }
+
+        private void Form1_Shown(object sender, EventArgs e)
+        {
+            Application.DoEvents();
+            LoadAPIConfig();
+        }
+        private void LoadAPIConfig()
+        {
+            if (!isXeroSetup)
             {
-                XeroConfig = DeSerializeObject<XeroConfiguration>(tokendata);
-                if (XeroConfig.ClientID != XeroClientID)
+                // We can ether save/restore the entire config or just the AccessToken element
+                string tokendata = AGenius.UsefulStuff.Utils.ReadTextFile("tokendata.txt");
+                UpdateStatus($"Loaded Token");
+                XeroClientID = AGenius.UsefulStuff.Utils.ReadTextFile("XeroClientID.txt");
+                if (!string.IsNullOrEmpty(tokendata))
+                {
+                    XeroConfig = DeSerializeObject<XeroConfiguration>(tokendata);
+                    if (XeroConfig.ClientID != XeroClientID)
+                    {
+                        // Setup New Config
+                        XeroConfig = new XeroConfiguration
+                        {
+                            ClientID = XeroClientID,
+                            CallbackUri = XeroCallbackUri,
+                            // Add them this way or see below
+                            //Scopes = new List<Xero.Net.Core.OAuth2.Model.XeroScope> { Xero.Net.Core.OAuth2.Model.XeroScope.accounting_contacts, Xero.Net.Core.OAuth2.Model.XeroScope.accounting_transactions },
+                            State = XeroState, // Optional - Not needed for a desktop app
+                            codeVerifier = null // Code verifier will be generated if empty
+                        };
+                        XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.all);
+                        XeroConfig.StoreReceivedScope = true;
+                        SaveConfig();
+                        UpdateStatus($"Client ID Changed");
+                    }
+                    else
+                    {
+                        // Test the change of scope to force a revoke and re-auth                    
+                        XeroConfig.StoreReceivedScope = true;
+                        SaveConfig();
+                        UpdateStatus($"Scope Changed");
+                    }
+
+                }
+                else
                 {
                     // Setup New Config
                     XeroConfig = new XeroConfiguration
@@ -49,63 +89,69 @@ namespace XeroAPI2Tests
                     };
                     XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.all);
                     XeroConfig.StoreReceivedScope = true;
-                    SaveConfig();
-                    UpdateStatus($"Client ID Changed");
+                    // Or add idividualy
+                    //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.files);
+                    //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.accounting_transactions);
+                    //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.accounting_reports_read);
+                    //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.accounting_journals_read);
+                    //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.accounting_settings_read);
+                    //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.accounting_contacts);
+                    //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.assets);               
+                }
+
+                // Restore saved config
+                xeroAPI = new Xero.Net.Core.API(XeroConfig);
+
+                SaveConfig();
+
+                if (!SetupApi(tenantName))
+                {
+                    UpdateStatus($"Failed to Connect");
+                    simpleButton1.Enabled = false;
+                    button1.Enabled = false;
+                    return; /// Stop doing anything else
                 }
                 else
                 {
-                    // Test the change of scope to force a revoke and re-auth
-                    XeroConfig.AddScope(XeroScope.accounting_all_read, true);
-                    XeroConfig.StoreReceivedScope = true;
-                    SaveConfig();
-                    UpdateStatus($"Scope Changed");
+                    UpdateStatus($"Ready - Refresh required : {XeroConfig.XeroAPIToken.ExpiresAtUtc.ToString()}");
+                    simpleButton1.Enabled = true;
+                    button1.Enabled = true;
                 }
-
-            }
-            else
+                xeroAPI.StatusUpdates += StatusUpdates; // Bind to the status update event 
+                isXeroSetup = true;
+            } else
             {
-                // Setup New Config
-                XeroConfig = new XeroConfiguration
+                // Already setup so just reload config
+                string tokendata = AGenius.UsefulStuff.Utils.ReadTextFile("tokendata.txt");
+                UpdateStatus($"Loaded Token");
+                if (!string.IsNullOrEmpty(tokendata))
                 {
-                    ClientID = XeroClientID,
-                    CallbackUri = XeroCallbackUri,
-                    // Add them this way or see below
-                    //Scopes = new List<Xero.Net.Core.OAuth2.Model.XeroScope> { Xero.Net.Core.OAuth2.Model.XeroScope.accounting_contacts, Xero.Net.Core.OAuth2.Model.XeroScope.accounting_transactions },
-                    State = XeroState, // Optional - Not needed for a desktop app
-                    codeVerifier = null // Code verifier will be generated if empty
-                };
-                XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.all);
-                XeroConfig.StoreReceivedScope = true;
-                // Or add idividualy
-                //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.files);
-                //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.accounting_transactions);
-                //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.accounting_reports_read);
-                //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.accounting_journals_read);
-                //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.accounting_settings_read);
-                //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.accounting_contacts);
-                //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.assets);               
+                    XeroConfig = DeSerializeObject<XeroConfiguration>(tokendata);
+                    xeroAPI.XeroConfig = XeroConfig;
+                    SaveConfig();
+                }
+                bool done = false;
+                do
+                {
+                    try
+                    {
+                        xeroAPI.InitializeAPI();
+                        UpdateStatus($"Initialized");
+                        done = true;
+                        SaveConfig(); // Ensure the new config (with new tokens are saved)
+                    }
+                    catch (Exception ex)
+                    {
+                        UpdateStatus(ex.Message);
+                        DialogResult rslt = MessageBox.Show(ex.Message + " Try Again?", "Error", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                        if (rslt == DialogResult.No)
+                        {
+                            done = true;
+                        }
+                    }
+                } while (!done);
             }
 
-            // Restore saved config
-            xeroAPI = new Xero.Net.Core.API(XeroConfig);
-
-            SaveConfig();
-
-            if (!SetupApi(tenantName))
-            {
-                UpdateStatus($"Failed to Connect");
-                simpleButton1.Enabled = false;
-                button1.Enabled = false;
-                return; /// Stop doing anything else
-            }
-            else
-            {
-                UpdateStatus($"Ready - Refresh required : {XeroConfig.XeroAPIToken.ExpiresAtUtc.ToString()}");
-                simpleButton1.Enabled = true;
-                button1.Enabled = true;
-            }
-
-            xeroAPI.StatusUpdates += StatusUpdates; // Bind to the status update event 
         }
         private void SaveConfig()
         {
@@ -197,7 +243,7 @@ namespace XeroAPI2Tests
 
         private void simpleButton1_Click(object sender, EventArgs e)
         {
-            xeroAPI.InitializeAPI();
+            LoadAPIConfig();
 
             var contacts = xeroAPI.AccountingApi.Contacts(Xero.Net.Api.Model.Accounting.Contact.ContactStatusEnum.ARCHIVED);
             if (contacts != null) UpdateStatus($"Found {contacts.Count} Archived Contacts");
@@ -371,7 +417,7 @@ namespace XeroAPI2Tests
 
         private void button1_Click(object sender, EventArgs e)
         {
-            xeroAPI.InitializeAPI();
+            LoadAPIConfig();
             // Create a test invoice
             var xeroContact = new Xero.Net.Api.Model.Accounting.Contact
             {
@@ -479,6 +525,7 @@ namespace XeroAPI2Tests
 
         private void button2_Click(object sender, EventArgs e)
         {
+            LoadAPIConfig();
             var contacts = xeroAPI.AccountingApi.Contacts(Xero.Net.Api.Model.Accounting.Contact.ContactStatusEnum.ACTIVE);
 
             if (contacts != null)
@@ -492,6 +539,7 @@ namespace XeroAPI2Tests
 
         private async void button3_Click(object sender, EventArgs e)
         {
+            LoadAPIConfig();
             // var contact = xeroAPI.AccountingApi.Contact(new Guid("00000000-0000-0000-0000-000000000000")); // Will break as no Error handling
             var contacts = xeroAPI.AccountingApi.Contacts(null, null, null, null, new List<Guid> { new Guid("00000000-0000-0000-0000-000000000000") });
             try
@@ -582,5 +630,6 @@ namespace XeroAPI2Tests
 
 
         }
+
     }
 }
