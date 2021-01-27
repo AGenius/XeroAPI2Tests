@@ -74,6 +74,7 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <None Include="packages.config" />
+    <None Include="Properties\DataSources\Xero.Net.Api.Model.Accounting.Account.datasource" />
     <None Include="Properties\DataSources\Xero.Net.Api.Model.Accounting.Contact.datasource" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -92,6 +93,10 @@
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\AGenius.ExtensionsCollection\Extenstions.Collection\AGenius.UsefulStuff.csproj">
+      <Project>{0b7cc724-52c5-4b8f-a028-91e6226f7922}</Project>
+      <Name>AGenius.UsefulStuff</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Xero.Net2\Xero.Net.csproj">
       <Project>{c3875286-3898-408d-9bc3-d4c50e177dfb}</Project>
       <Name>Xero.Net</Name>

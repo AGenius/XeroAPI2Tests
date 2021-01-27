@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 using Xero.Net.Core.OAuth2.Model;
+using AGenius.UsefulStuff.AMS.Profile;
+using AGenius.UsefulStuff;
+using System.Security;
+using static AGenius.UsefulStuff.ObjectExtensions;
 
 namespace XeroAPI2Tests
 {
@@ -25,9 +29,9 @@ namespace XeroAPI2Tests
         private void Form1_Load(object sender, EventArgs e)
         {
             // We can ether save/restore the entire config or just the AccessToken element
-            string tokendata = ReadTextFile("tokendata.txt");
+            string tokendata = AGenius.UsefulStuff.Utils.ReadTextFile("tokendata.txt");
             UpdateStatus($"Loaded Token");
-            XeroClientID = ReadTextFile("XeroClientID.txt");
+            XeroClientID = AGenius.UsefulStuff.Utils.ReadTextFile("XeroClientID.txt");
             if (!string.IsNullOrEmpty(tokendata))
             {
                 XeroConfig = DeSerializeObject<XeroConfiguration>(tokendata);
@@ -44,9 +48,19 @@ namespace XeroAPI2Tests
                         codeVerifier = null // Code verifier will be generated if empty
                     };
                     XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.all);
+                    XeroConfig.StoreReceivedScope = true;
                     SaveConfig();
                     UpdateStatus($"Client ID Changed");
                 }
+                else
+                {
+                    // Test the change of scope to force a revoke and re-auth
+                    XeroConfig.AddScope(XeroScope.accounting_all_read, true);
+                    XeroConfig.StoreReceivedScope = true;
+                    SaveConfig();
+                    UpdateStatus($"Scope Changed");
+                }
+
             }
             else
             {
@@ -61,6 +75,7 @@ namespace XeroAPI2Tests
                     codeVerifier = null // Code verifier will be generated if empty
                 };
                 XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.all);
+                XeroConfig.StoreReceivedScope = true;
                 // Or add idividualy
                 //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.files);
                 //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.accounting_transactions);
@@ -94,8 +109,10 @@ namespace XeroAPI2Tests
         }
         private void SaveConfig()
         {
+            AGenius.UsefulStuff.AMS.Profile.Xml prof = new AGenius.UsefulStuff.AMS.Profile.Xml();
+
             string tokendata = SerializeObject(XeroConfig);
-            WriteTextFile("tokendata.txt", tokendata);
+            AGenius.UsefulStuff.Utils.WriteTextFile("tokendata.txt", tokendata);
             UpdateStatus($"Config Saved");
         }
         private bool SetupApi(string tName)
@@ -289,7 +306,7 @@ namespace XeroAPI2Tests
             // Event fired so recored the log 
             System.Diagnostics.Debug.WriteLine(e.MessageText);
 
-            WriteLogFile($"{e.Status.ToString()} - {e.MessageText}", "APILog", true, true);
+            AGenius.UsefulStuff.Utils.WriteLogFile($"{e.Status.ToString()} - {e.MessageText}", "APILog", null, null, true, true);
             // UpdateStatus($"{e.Status.ToString()} - {e.MessageText}", lstResults); gets stuck due to invoke?!?!?!!?!?
         }
         public void UpdateStatus(string sText, ListBox lstResults = null, bool bSameLine = false, bool bAdd = false)
@@ -335,115 +352,6 @@ namespace XeroAPI2Tests
             }
         }
 
-        public void WriteLogFile(string sText, string sLogFileName, bool bTimeStamp = false, bool appendNewLine = true)
-        {
-            try
-            {
-                string sPath = Path.Combine(ApplicationPath, "Logs", $"{sLogFileName}.log");
-
-                if (System.IO.File.Exists(sPath).Equals(false))
-                {
-                    Directory.CreateDirectory(Path.Combine(ApplicationPath, "Logs"));
-
-                    System.IO.File.AppendAllText(sPath, @"-----------------------------" + Environment.NewLine);
-                    System.IO.File.AppendAllText(sPath, $"{sLogFileName} Log file{Environment.NewLine}");
-                    System.IO.File.AppendAllText(sPath, @"-----------------------------" + Environment.NewLine);
-                    System.IO.File.AppendAllText(sPath, $"Created {DateTime.Now}{Environment.NewLine}{Environment.NewLine}");
-                }
-
-                if (bTimeStamp)
-                {
-                    sText = $"({DateTime.Now}) {sText}";
-                }
-                if (appendNewLine)
-                {
-                    System.IO.File.AppendAllText(sPath, Environment.NewLine + sText);
-                }
-                else
-                {
-                    System.IO.File.AppendAllText(sPath, sText);
-                }
-
-                FileInfo fiLog = new FileInfo(sPath);
-
-                if (fiLog.Length > 1000000)
-                {
-                    System.IO.File.Move(sPath, $@"{ApplicationPath}\logs\Completed\{sLogFileName}_{DateTime.Now.ToString("dd-mm-yyyy HHmmss")}.log");
-                }
-            }
-            catch (System.Exception ex)
-            {
-            }
-        }
-
-        /// <summary>Read the contents of a text file into a string </summary>
-        /// <param name="filepath">File to read</param>
-        /// <returns>files contents</returns>
-        public static string ReadTextFile(string filepath)
-        {
-            try
-            {
-                string test = Path.GetPathRoot(filepath);
-
-                if (String.IsNullOrEmpty(test) || (test.StartsWith(@"\") && !test.StartsWith(@"\\")))
-                {
-
-                    // No Full path supplied so start from Application root
-                    if (test.StartsWith(@"\"))
-                    {
-                        filepath = ApplicationPath + filepath;
-                    }
-                    else
-                    {
-                        filepath = $"{ApplicationPath}\\{filepath}";
-                    }
-                }
-
-                if (File.Exists(filepath).Equals(true))
-                {
-                    using (StreamReader reader = new StreamReader(filepath))
-                    {
-                        string contents = reader.ReadToEnd();
-                        return contents;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-            }
-
-            return null;
-        }
-        /// <summary>Write the contents of a string to a file </summary>
-        /// <param name="filepath">File to write to</param>        
-        public static void WriteTextFile(string filepath, string contents)
-        {
-            try
-            {
-                string test = Path.GetPathRoot(filepath);
-
-                if (String.IsNullOrEmpty(test) || (test.StartsWith(@"\") && test.Substring(1, 1) != @"\"))
-                {
-
-                    // No Full path supplied so start from Application root
-                    if (test.StartsWith(@"\"))
-                    {
-                        filepath = ApplicationPath + filepath;
-                    }
-                    else
-                    {
-                        filepath = $"{ApplicationPath}\\{filepath}";
-                    }
-                }
-                using (StreamWriter sw = new StreamWriter(filepath))
-                {
-                    sw.WriteLine(contents);
-                }
-            }
-            catch (Exception)
-            {
-            }
-        }
 
 
         #region JSON Serialization methods
@@ -577,6 +485,8 @@ namespace XeroAPI2Tests
             {
                 UpdateStatus($"Found {contacts.Count} Active Contacts");
                 bindingSource1.DataSource = contacts;
+                dgData.DataSource = null;
+                dgData.DataSource = contacts;
             }
         }
 
@@ -606,8 +516,71 @@ namespace XeroAPI2Tests
 
         private void button4_Click(object sender, EventArgs e)
         {
-            var contact = xeroAPI.AccountingApi.Contacts($"Name =\"{txtName.Text}\""); // Will break as no Error handling
+            var contact = xeroAPI.AccountingApi.Contacts($"Name =\"{txtName.Text}\"");
             bindingSource1.DataSource = contact;
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            var accounts = xeroAPI.AccountingApi.Accounts(Xero.Net.Api.Model.Accounting.Account.StatusEnum.ACTIVE, null, Xero.Net.Api.Model.Accounting.Account.ClassEnum.REVENUE);
+            bindingSource2.DataSource = accounts;
+
+            dgData.DataSource = null;
+            dgData.DataSource = accounts;
+        }
+
+        private void dgData_DataError(object sender, DataGridViewDataErrorEventArgs e)
+        {
+            e.Cancel = true;
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            xeroAPI.RevokeAuth();
+            SaveConfig();
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            string[] arraytest = { "field1=value1", "field2=value2", "field3=value3", "field4=value4" };
+
+            string[] fields = arraytest.ToFieldNames();
+            string[] values = arraytest.ToFieldValues();
+
+            string fieldscsv = arraytest.ToFieldNamesCSV();
+            string valuesscsv = arraytest.ToFieldValuesCSV();
+
+            string testsecure = "This is a test string";
+
+            SecureString newstring = testsecure.ToSecureString();
+
+            string unsecure = newstring.ToUnSecureString();
+
+            string dur = 180.ToDurationString("hrs", "mins");
+
+            List<string> items = new List<string> { "item1", "item2", "item3", "item4" };
+
+            string csv = items.ToCsv();
+            string simplee = testsecure.SimpleEncrypt();
+
+            string simpleback = simplee.SimpleEncrypt();
+
+            string websafe = testsecure.EncryptStringWebSafe("my password");
+
+            string dewebsafe = websafe.DecryptStringWebSafe("my password");
+
+            string randompass = Utils.GeneratePassword(20, 5);
+
+            Tenant t1 = new Tenant { id = new Guid(), TenantName = "Test", TenantType = "123" };
+            Tenant t2 = new Tenant { id = new Guid(), TenantName = "Test", TenantType = "123" };
+
+            List<Variance> diffs = t1.DetailedCompare(t2); // No diffs
+
+            t2 = new Tenant { id = new Guid(), TenantName = "Test 2", TenantType = "123" };
+
+            diffs = t1.DetailedCompare(t2); // Diffs
+
+
         }
     }
 }
