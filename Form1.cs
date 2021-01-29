@@ -534,6 +534,13 @@ namespace XeroAPI2Tests
                 bindingSource1.DataSource = contacts;
                 dgData.DataSource = null;
                 dgData.DataSource = contacts;
+
+                UpdateStatus("Rate Limits");
+                UpdateStatus($"Remaining for Per Min for App:{xeroAPI.AccountingApi.RateInfo.AppMinuteLimitRemaining}");
+                UpdateStatus($"Remaining for Day:{xeroAPI.AccountingApi.RateInfo.DayLimitRemaining}");
+                UpdateStatus($"Remaining for Minute:{xeroAPI.AccountingApi.RateInfo.MinuteLimitRemaining}");
+                UpdateStatus($"Remaining for RetryAfter:{xeroAPI.AccountingApi.RateInfo.RetryAfter}");
+                UpdateStatus($"Remaining for WhenUpdated:{xeroAPI.AccountingApi.RateInfo.WhenUpdated}");
             }
         }
 
