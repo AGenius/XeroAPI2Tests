@@ -7,6 +7,8 @@ using AGenius.UsefulStuff.AMS.Profile;
 using AGenius.UsefulStuff;
 using System.Security;
 using static AGenius.UsefulStuff.ObjectExtensions;
+using System.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace XeroAPI2Tests
 {
@@ -48,7 +50,10 @@ namespace XeroAPI2Tests
                 XeroClientID = AGenius.UsefulStuff.Utils.ReadTextFile("XeroClientID.txt");
                 if (!string.IsNullOrEmpty(tokendata))
                 {
-                    XeroConfig = DeSerializeObject<XeroConfiguration>(tokendata);
+                    XeroConfig = Utils.DeSerializeObject<XeroConfiguration>(tokendata);
+                    XeroConfig = new XeroConfiguration("tokendata.txt"); // Load from a text file
+                    XeroConfig = new XeroConfiguration(tokendata); // Load from json string
+
                     if (XeroConfig.ClientID != XeroClientID)
                     {
                         // Setup New Config
@@ -68,7 +73,7 @@ namespace XeroAPI2Tests
                     }
                     else
                     {
-                        // Test the change of scope to force a revoke and re-auth                    
+                        // Test the change of scope to force a revoke and re-auth     
                         XeroConfig.StoreReceivedScope = true;
                         SaveConfig();
                         UpdateStatus($"Scope Changed");
@@ -113,13 +118,14 @@ namespace XeroAPI2Tests
                 }
                 else
                 {
-                    UpdateStatus($"Ready - Refresh required : {XeroConfig.XeroAPIToken.ExpiresAtUtc.ToString()}");
+                    UpdateStatus($"Ready - Refresh required : {XeroConfig.AccessTokenSet.ExpiresAtUtc.ToString()}");
                     simpleButton1.Enabled = true;
                     button1.Enabled = true;
                 }
                 xeroAPI.StatusUpdates += StatusUpdates; // Bind to the status update event 
                 isXeroSetup = true;
-            } else
+            }
+            else
             {
                 // Already setup so just reload config
                 string tokendata = AGenius.UsefulStuff.Utils.ReadTextFile("tokendata.txt");
@@ -526,7 +532,13 @@ namespace XeroAPI2Tests
         private void button2_Click(object sender, EventArgs e)
         {
             LoadAPIConfig();
+
+            var accounts = System.Threading.Tasks.Task.Run(() => xeroAPI.AccountingApi.GetAccountsAsync(XeroConfig.AccessTokenSet.AccessToken, XeroConfig.SelectedTenantID)).ConfigureAwait(false).GetAwaiter().GetResult()._Accounts;
+
+
+
             var contacts = xeroAPI.AccountingApi.Contacts(Xero.Net.Api.Model.Accounting.Contact.ContactStatusEnum.ACTIVE);
+
 
             if (contacts != null)
             {
@@ -541,10 +553,14 @@ namespace XeroAPI2Tests
                 UpdateStatus($"Remaining for Minute:{xeroAPI.AccountingApi.RateInfo.MinuteLimitRemaining}");
                 UpdateStatus($"Remaining for RetryAfter:{xeroAPI.AccountingApi.RateInfo.RetryAfter}");
                 UpdateStatus($"Remaining for WhenUpdated:{xeroAPI.AccountingApi.RateInfo.WhenUpdated}");
+
+
+
+
             }
         }
 
-        private async void button3_Click(object sender, EventArgs e)
+        private void button3_Click(object sender, EventArgs e)
         {
             LoadAPIConfig();
             // var contact = xeroAPI.AccountingApi.Contact(new Guid("00000000-0000-0000-0000-000000000000")); // Will break as no Error handling
@@ -638,5 +654,17 @@ namespace XeroAPI2Tests
 
         }
 
+        private void button8_Click(object sender, EventArgs e)
+        {
+            DateTime ddd = XeroConfig.AccessTokenSet.AccessTokenRecord.nbf.DateTimeFromUnixTime();
+            DateTime ddd2 = Utils.DateTimeFromUnixTime(XeroConfig.AccessTokenSet.AccessTokenRecord.nbf);
+
+            var jwttest = Utils.JWTtoJSON(XeroConfig.AccessTokenSet.AccessToken);
+            var jwttest2 = Utils.JWTtoJSON(XeroConfig.AccessTokenSet.IdToken);
+
+
+            int h = 0;
+
+        }
     }
 }
