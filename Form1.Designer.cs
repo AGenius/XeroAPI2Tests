@@ -33,20 +33,23 @@ namespace XeroAPI2Tests
             this.simpleButton1 = new System.Windows.Forms.Button();
             this.lstResults = new System.Windows.Forms.ListBox();
             this.button1 = new System.Windows.Forms.Button();
-            this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
+            this.bsContacts = new System.Windows.Forms.BindingSource(this.components);
             this.dgData = new System.Windows.Forms.DataGridView();
             this.button2 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
             this.txtName = new System.Windows.Forms.TextBox();
-            this.bindingSource2 = new System.Windows.Forms.BindingSource(this.components);
+            this.bsAccounts = new System.Windows.Forms.BindingSource(this.components);
             this.button5 = new System.Windows.Forms.Button();
             this.button6 = new System.Windows.Forms.Button();
             this.button7 = new System.Windows.Forms.Button();
             this.button8 = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).BeginInit();
+            this.button9 = new System.Windows.Forms.Button();
+            this.bsInvoices = new System.Windows.Forms.BindingSource(this.components);
+            ((System.ComponentModel.ISupportInitialize)(this.bsContacts)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgData)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingSource2)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bsAccounts)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bsInvoices)).BeginInit();
             this.SuspendLayout();
             // 
             // simpleButton1
@@ -78,9 +81,9 @@ namespace XeroAPI2Tests
             this.button1.Text = "Create Invoice";
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
-            // bindingSource1
+            // bsContacts
             // 
-            this.bindingSource1.DataSource = typeof(Xero.Net.Api.Model.Accounting.Contact);
+            this.bsContacts.DataSource = typeof(Xero.Net.Api.Model.Accounting.Contact);
             // 
             // dgData
             // 
@@ -98,25 +101,25 @@ namespace XeroAPI2Tests
             // 
             this.button2.Location = new System.Drawing.Point(235, 12);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(181, 23);
+            this.button2.Size = new System.Drawing.Size(131, 23);
             this.button2.TabIndex = 5;
             this.button2.Text = "Load Contacts Grid";
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(422, 12);
+            this.button3.Location = new System.Drawing.Point(372, 12);
             this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(128, 23);
+            this.button3.Size = new System.Drawing.Size(96, 23);
             this.button3.TabIndex = 6;
             this.button3.Text = "Load Contact";
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
             // button4
             // 
-            this.button4.Location = new System.Drawing.Point(556, 12);
+            this.button4.Location = new System.Drawing.Point(583, 12);
             this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(128, 23);
+            this.button4.Size = new System.Drawing.Size(101, 23);
             this.button4.TabIndex = 7;
             this.button4.Text = "Find Contact:";
             this.button4.Click += new System.EventHandler(this.button4_Click);
@@ -128,9 +131,9 @@ namespace XeroAPI2Tests
             this.txtName.Size = new System.Drawing.Size(178, 20);
             this.txtName.TabIndex = 8;
             // 
-            // bindingSource2
+            // bsAccounts
             // 
-            this.bindingSource2.DataSource = typeof(Xero.Net.Api.Model.Accounting.Account);
+            this.bsAccounts.DataSource = typeof(Xero.Net.Api.Model.Accounting.Account);
             // 
             // button5
             // 
@@ -168,11 +171,25 @@ namespace XeroAPI2Tests
             this.button8.Text = "Reports";
             this.button8.Click += new System.EventHandler(this.button8_Click);
             // 
+            // button9
+            // 
+            this.button9.Location = new System.Drawing.Point(474, 13);
+            this.button9.Name = "button9";
+            this.button9.Size = new System.Drawing.Size(131, 23);
+            this.button9.TabIndex = 13;
+            this.button9.Text = "Load invoices";
+            this.button9.Click += new System.EventHandler(this.button9_Click);
+            // 
+            // bsInvoices
+            // 
+            this.bsInvoices.DataSource = typeof(Xero.Net.Api.Model.Accounting.Invoices);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1465, 650);
+            this.Controls.Add(this.button9);
             this.Controls.Add(this.button8);
             this.Controls.Add(this.button7);
             this.Controls.Add(this.button6);
@@ -189,9 +206,10 @@ namespace XeroAPI2Tests
             this.Text = "Form1";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.Shown += new System.EventHandler(this.Form1_Shown);
-            ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bsContacts)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgData)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.bindingSource2)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bsAccounts)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bsInvoices)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -202,17 +220,19 @@ namespace XeroAPI2Tests
         private System.Windows.Forms.Button simpleButton1;
         private System.Windows.Forms.ListBox lstResults;
         private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.BindingSource bindingSource1;
+        private System.Windows.Forms.BindingSource bsContacts;
         private System.Windows.Forms.DataGridView dgData;
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Button button3;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.TextBox txtName;
-        private System.Windows.Forms.BindingSource bindingSource2;
+        private System.Windows.Forms.BindingSource bsAccounts;
         private System.Windows.Forms.Button button5;
         private System.Windows.Forms.Button button6;
         private System.Windows.Forms.Button button7;
         private System.Windows.Forms.Button button8;
+        private System.Windows.Forms.Button button9;
+        private System.Windows.Forms.BindingSource bsInvoices;
     }
 }
 

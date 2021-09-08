@@ -104,6 +104,8 @@ namespace XeroAPI2Tests
                     //XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.assets);               
                 }
 
+                XeroConfig.AccessGrantedHTML = "<h1>ACCESS GRANTED</h1>";
+                
                 // Restore saved config
                 xeroAPI = new Xero.Net.Core.API(XeroConfig);
 
@@ -123,6 +125,7 @@ namespace XeroAPI2Tests
                     button1.Enabled = true;
                 }
                 xeroAPI.StatusUpdates += StatusUpdates; // Bind to the status update event 
+                
                 isXeroSetup = true;
             }
             else
@@ -161,11 +164,9 @@ namespace XeroAPI2Tests
         }
         private void SaveConfig()
         {
-            AGenius.UsefulStuff.AMS.Profile.Xml prof = new AGenius.UsefulStuff.AMS.Profile.Xml();
+            var path = XeroConfig.SaveToFile("tokendata.txt", true);
 
-            string tokendata = SerializeObject(XeroConfig);
-            AGenius.UsefulStuff.Utils.WriteTextFile("tokendata.txt", tokendata);
-            UpdateStatus($"Config Saved");
+            UpdateStatus($"Config Saved : {path}");
         }
         private bool SetupApi(string tName)
         {
@@ -543,7 +544,7 @@ namespace XeroAPI2Tests
             if (contacts != null)
             {
                 UpdateStatus($"Found {contacts.Count} Active Contacts");
-                bindingSource1.DataSource = contacts;
+                bsContacts.DataSource = contacts;
                 dgData.DataSource = null;
                 dgData.DataSource = contacts;
 
@@ -572,7 +573,6 @@ namespace XeroAPI2Tests
             }
             catch (Exception ex)
             {
-
                 int h = 0;
             }
 
@@ -588,13 +588,13 @@ namespace XeroAPI2Tests
         private void button4_Click(object sender, EventArgs e)
         {
             var contact = xeroAPI.AccountingApi.Contacts($"Name =\"{txtName.Text}\"");
-            bindingSource1.DataSource = contact;
+            bsContacts.DataSource = contact;
         }
 
         private void button5_Click(object sender, EventArgs e)
         {
             var accounts = xeroAPI.AccountingApi.Accounts(Xero.Net.Api.Model.Accounting.Account.StatusEnum.ACTIVE, null, Xero.Net.Api.Model.Accounting.Account.ClassEnum.REVENUE);
-            bindingSource2.DataSource = accounts;
+            bsAccounts.DataSource = accounts;
 
             dgData.DataSource = null;
             dgData.DataSource = accounts;
@@ -656,15 +656,52 @@ namespace XeroAPI2Tests
 
         private void button8_Click(object sender, EventArgs e)
         {
-            DateTime ddd = XeroConfig.AccessTokenSet.AccessTokenRecord.nbf.DateTimeFromUnixTime();
-            DateTime ddd2 = Utils.DateTimeFromUnixTime(XeroConfig.AccessTokenSet.AccessTokenRecord.nbf);
-
-            var jwttest = Utils.JWTtoJSON(XeroConfig.AccessTokenSet.AccessToken);
-            var jwttest2 = Utils.JWTtoJSON(XeroConfig.AccessTokenSet.IdToken);
-
+            string mime = AGenius.UsefulStuff.Helpers.MimeTypesList.GetMimeType(".xlm");
+            string ext = AGenius.UsefulStuff.Helpers.MimeTypesList.GetExtension(mime);
 
             int h = 0;
 
+        }
+
+        private void button9_Click(object sender, EventArgs e)
+        {
+            LoadAPIConfig();
+
+            var xeroinvs = xeroAPI.AccountingApi.Invoices(Xero.Net.Api.Model.Accounting.Invoice.StatusEnum.AUTHORISED);
+            UpdateStatus($"Found {xeroinvs.Count} Invoices");
+            xeroAPI.AccountingApi.RaiseNotFoundErrors = true;// Should return null for not found
+            if (xeroinvs != null)
+            {
+                List<string> invs = new List<string>();
+                // load 5 random invoices
+                for (int i = 0; i < 5; i++)
+                {
+                    int r = AGenius.UsefulStuff.Utils.RandomNumber(0, xeroinvs.Count);
+                    if (!invs.Contains(xeroinvs[r].InvoiceNumber))
+                    {
+                        invs.Add(xeroinvs[r].InvoiceNumber);
+                    }
+                }
+                var single = xeroAPI.AccountingApi.Invoice("INV-1908870",null,true);
+                UpdateStatus($"Read Single:{single.Contact.Name} - {single.InvoiceID}");
+                var randominvs = xeroAPI.AccountingApi.Invoices(invs);
+
+
+                bsInvoices.DataSource = randominvs;
+                dgData.DataSource = null;
+                dgData.DataSource = randominvs;
+
+                UpdateStatus("Rate Limits");
+                UpdateStatus($"Remaining for Per Min for App:{xeroAPI.AccountingApi.RateInfo.AppMinuteLimitRemaining}");
+                UpdateStatus($"Remaining for Day:{xeroAPI.AccountingApi.RateInfo.DayLimitRemaining}");
+                UpdateStatus($"Remaining for Minute:{xeroAPI.AccountingApi.RateInfo.MinuteLimitRemaining}");
+                UpdateStatus($"Remaining for RetryAfter:{xeroAPI.AccountingApi.RateInfo.RetryAfter}");
+                UpdateStatus($"Remaining for WhenUpdated:{xeroAPI.AccountingApi.RateInfo.WhenUpdated}");
+
+
+
+
+            }
         }
     }
 }
