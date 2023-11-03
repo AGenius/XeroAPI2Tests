@@ -18,7 +18,7 @@ namespace XeroAPI2Tests
         string XeroState = "123456";
 
         string XeroClientID = "Your Client ID"; // Will load from File
-        string tenantName = "demo company (uk)";// "your company";
+        string tenantName = "Demo Company (UK)";// "your company";
 
         public bool isXeroSetup { get; set; }
 
@@ -50,9 +50,18 @@ namespace XeroAPI2Tests
                 XeroClientID = AGenius.UsefulStuff.Utils.ReadTextFile("XeroClientID.txt");
                 if (!string.IsNullOrEmpty(tokendata))
                 {
-                    XeroConfig = Utils.DeSerializeObject<XeroConfiguration>(tokendata);
-                    XeroConfig = new XeroConfiguration("tokendata.txt"); // Load from a text file
-                    XeroConfig = new XeroConfiguration(tokendata); // Load from json string
+                    XeroConfig = new XeroConfiguration();
+
+                    try
+                    {
+                        XeroConfig = Utils.DeSerializeObject<XeroConfiguration>(tokendata);
+                        XeroConfig = new XeroConfiguration("tokendata.txt"); // Load from a text file
+                        XeroConfig = new XeroConfiguration(tokendata); // Load from json string
+                    }
+                    catch (Exception)
+                    {
+
+                    }
 
                     if (XeroConfig.ClientID != XeroClientID)
                     {
@@ -66,7 +75,7 @@ namespace XeroAPI2Tests
                             State = XeroState, // Optional - Not needed for a desktop app
                             codeVerifier = null // Code verifier will be generated if empty
                         };
-                        XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.all);
+                        XeroConfig.AddScope(Xero.Net.Core.OAuth2.Model.XeroScope.all);                       
                         XeroConfig.StoreReceivedScope = true;
                         SaveConfig();
                         UpdateStatus($"Client ID Changed");
@@ -105,7 +114,7 @@ namespace XeroAPI2Tests
                 }
 
                 XeroConfig.AccessGrantedHTML = "<h1>ACCESS GRANTED</h1>";
-                
+
                 // Restore saved config
                 xeroAPI = new Xero.Net.Core.API(XeroConfig);
 
@@ -125,7 +134,7 @@ namespace XeroAPI2Tests
                     button1.Enabled = true;
                 }
                 xeroAPI.StatusUpdates += StatusUpdates; // Bind to the status update event 
-                
+
                 isXeroSetup = true;
             }
             else
@@ -322,8 +331,25 @@ namespace XeroAPI2Tests
             if (banktransfers != null) UpdateStatus($"Found {banktransfers.Count} Bank Transfers");
             if (banktransfers != null && banktransfers.Count > 0)
             {
-                var singlebanktransfer = xeroAPI.AccountingApi.BankTransaction(banktransfers[3].BankTransferID.Value);
-                UpdateStatus($"Single Bank Transfer :{singlebanktransfer} ");
+                // Test not found by calling wrong endpoint
+                try
+                {
+                    var singlebanktransfer = xeroAPI.AccountingApi.BankTransaction(banktransfers[3].BankTransferID.Value);
+                    UpdateStatus($"Single Bank Transfer not found test :{singlebanktransfer} ");
+                }
+                catch (Exception)
+                {
+                    UpdateStatus($"Single Bank Transfer :Not Found ");
+                }
+                try
+                {
+                    var singlebanktransfer = xeroAPI.AccountingApi.BankTransfer(banktransfers[3].BankTransferID.Value);
+                    UpdateStatus($"Single Bank Transfer :{singlebanktransfer} ");
+                }
+                catch (Exception)
+                {
+                    UpdateStatus($"Single Bank Transfer :Not Found ");
+                }
             }
 
             var taxrates = xeroAPI.AccountingApi.TaxRates();
@@ -483,7 +509,7 @@ namespace XeroAPI2Tests
             invoiceRecord.Type = Xero.Net.Api.Model.Accounting.Invoice.TypeEnum.ACCREC;
             invoiceRecord.Reference = $"oAuth2/Testing";
             invoiceRecord.LineItems = new List<Xero.Net.Api.Model.Accounting.LineItem>();
-
+            invoiceRecord.InvoiceNumber = "INV-0047";
             // Line Item 1
             // Create the Tracking Item
             var tracking = new List<Xero.Net.Api.Model.Accounting.LineItemTracking>();
@@ -519,15 +545,23 @@ namespace XeroAPI2Tests
             };
 
             invoiceRecord.LineItems.Add(lineItem2); // Add the line item to the invoice object             
-
-            if (invoiceRecord.ValidationErrors == null || invoiceRecord.ValidationErrors.Count == 0)
+            try
             {
-                var createdInv = xeroAPI.AccountingApi.CreateInvoice(invoiceRecord);
-                if (createdInv.InvoiceID != Guid.Empty)
+                if (invoiceRecord.ValidationErrors == null || invoiceRecord.ValidationErrors.Count == 0)
                 {
-                    System.Diagnostics.Debug.WriteLine("Created New Invoice");
+                    var createdInv = xeroAPI.AccountingApi.CreateInvoice(invoiceRecord);
+                    if (createdInv.InvoiceID != Guid.Empty)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Created New Invoice");
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -593,7 +627,14 @@ namespace XeroAPI2Tests
 
         private void button5_Click(object sender, EventArgs e)
         {
-            var accounts = xeroAPI.AccountingApi.Accounts(Xero.Net.Api.Model.Accounting.Account.StatusEnum.ACTIVE, null, Xero.Net.Api.Model.Accounting.Account.ClassEnum.REVENUE);
+            //var accounts = xeroAPI.AccountingApi.Accounts(Xero.Net.Api.Model.Accounting.Account.StatusEnum.ACTIVE, null, Xero.Net.Api.Model.Accounting.Account.ClassEnum.REVENUE);
+
+            List<Xero.Net.Api.Model.Accounting.Account.StatusEnum> status = new List<Xero.Net.Api.Model.Accounting.Account.StatusEnum>();
+            status.Add(Xero.Net.Api.Model.Accounting.Account.StatusEnum.ACTIVE);
+            status.Add(Xero.Net.Api.Model.Accounting.Account.StatusEnum.DELETED);
+
+            var accounts = xeroAPI.AccountingApi.Accounts(status);
+
             bsAccounts.DataSource = accounts;
 
             dgData.DataSource = null;
@@ -674,16 +715,16 @@ namespace XeroAPI2Tests
             {
                 List<string> invs = new List<string>();
                 // load 5 random invoices
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < xeroinvs.Count; i++)
                 {
-                    int r = AGenius.UsefulStuff.Utils.RandomNumber(0, xeroinvs.Count);
-                    if (!invs.Contains(xeroinvs[r].InvoiceNumber))
+                    //int r = AGenius.UsefulStuff.Utils.RandomNumber(0, xeroinvs.Count);
+                    if (!invs.Contains(xeroinvs[i].InvoiceNumber))
                     {
-                        invs.Add(xeroinvs[r].InvoiceNumber);
+                        invs.Add(xeroinvs[i].InvoiceNumber);
                     }
                 }
-                var single = xeroAPI.AccountingApi.Invoice("INV-1908870",null,true);
-                UpdateStatus($"Read Single:{single.Contact.Name} - {single.InvoiceID}");
+                //  var single = xeroAPI.AccountingApi.Invoice("INV-1908870",null,true);
+                //  UpdateStatus($"Read Single:{single.Contact.Name} - {single.InvoiceID}");
                 var randominvs = xeroAPI.AccountingApi.Invoices(invs);
 
 
